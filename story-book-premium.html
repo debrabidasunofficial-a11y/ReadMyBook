@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>A Story by Nature · Premium Reader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Merriweather:wght@300;400&family=Inter:wght@400&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  background: #d6d2c8;
+  font-family: 'Merriweather', serif;
+  overflow: hidden;
+}
+
+/* progress bar */
+.progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: #1c1c1c;
+  width: 0%;
+  z-index: 5;
+}
+
+/* book */
+.book {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page {
+  width: 90%;
+  max-width: 420px;
+  height: 85%;
+  background: #faf8f3;
+  padding: 40px 30px;
+  position: absolute;
+  border-radius: 4px;
+  transform-origin: left center;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+  transition: transform 0.6s ease, opacity 0.6s ease, box-shadow 0.2s ease;
+}
+
+.page h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.page p {
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 20px;
+  right: 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #555;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flip {
+  transform: rotateY(-180deg);
+}
+
+/* poster stamp overlay */
+.stamp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.stamp-overlay.hidden {
+  display: none;
+}
+
+.stamp-poster {
+  width: 260px;
+  height: 360px;
+  background: #faf8f3;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border-radius: 6px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.stamp-quote {
+  margin-top: 16px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+}
+
+.stamp-btn {
+  margin-top: 18px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #1c1c1c;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="book">
+  <div class="page" id="p1">
+    <h1>The Debt of the Elements</h1>
+    <p>
+      In the early eighteenth century, Devi danced as the plague hollowed her
+      breath. Faith watched. Nature waited.
+    </p>
+    <div class="page-number">1</div>
+  </div>
+
+  <div class="page hidden" id="p2">
+    <p>
+      Dhananjay chose the forbidden. Fire burned. Water drowned. Earth crushed.
+      Air fled. Space remembered.
+    </p>
+    <div class="page-number">2</div>
+  </div>
+
+  <div class="page hidden" id="p3">
+    <p>
+      Nature never forgets a debt. It collects across time.
+    </p>
+    <div class="page-number">3</div>
+  </div>
+
+  <div class="page hidden" id="p4">
+    <p>
+      What was borrowed returned with interest. The story continued.
+    </p>
+    <div class="page-number">4</div>
+  </div>
+</div>
+
+<!-- poster stamp -->
+<div class="stamp-overlay hidden" id="stampOverlay">
+  <div class="stamp-poster" id="stampPoster"></div>
+</div>
+
+<audio id="flipSound">
+  <source src="data:audio/mp3;base64,//uQxAAADhYWFh..." type="audio/mp3">
+</audio>
+
+<script>
+let current = 1;
+const total = 4;
+let startX = 0;
+const progress = document.getElementById("progress");
+const sound = document.getElementById("flipSound");
+
+const posters = {
+  0.25: {
+    svg: posterSVG("Quarter I", "You stayed. Most readers don’t."),
+  },
+  0.5: {
+    svg: posterSVG("Halfway", "Meaning forms through patience."),
+  },
+  0.75: {
+    svg: posterSVG("Almost There", "Stories reward endurance."),
+  },
+  1: {
+    svg: posterSVG("Completed", "You finished the journey."),
+  }
+};
+
+let unlocked = [];
+
+updateProgress();
+
+document.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+document.addEventListener("touchmove", e => {
+  const delta = e.touches[0].clientX - startX;
+  document.getElementById("p" + current)
+    .style.boxShadow = `${-delta/10}px 12px 35px rgba(0,0,0,0.35)`;
+});
+
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX - endX > 60) nextPage();
+  if (endX - startX > 60) prevPage();
+  resetShadow();
+});
+
+function nextPage() {
+  if (current >= total) return;
+  playSound();
+  document.getElementById("p" + current).classList.add("flip");
+  current++;
+  document.getElementById("p" + current).classList.remove("hidden");
+  updateProgress();
+}
+
+function prevPage() {
+  if (current <= 1) return;
+  playSound();
+  document.getElementById("p" + current).classList.add("hidden");
+  current--;
+  document.getElementById("p" + current).classList.remove("flip");
+  updateProgress();
+}
+
+function playSound() {
+  sound.currentTime = 0;
+  sound.play();
+}
+
+function resetShadow() {
+  document.querySelectorAll(".page").forEach(p => {
+    p.style.boxShadow = "0 12px 35px rgba(0,0,0,0.25)";
+  });
+}
+
+function updateProgress() {
+  const percent = current / total;
+  progress.style.width = percent * 100 + "%";
+  checkPoster(percent);
+}
+
+function checkPoster(percent) {
+  for (const key in posters) {
+    const val = Number(key);
+    if (percent >= val && !unlocked.includes(val)) {
+      unlocked.push(val);
+      showPoster(posters[key].svg);
+      break;
+    }
+  }
+}
+
+function showPoster(svg) {
+  document.getElementById("stampPoster").innerHTML = svg +
+    `<button class="stamp-btn" onclick="closePoster()">Continue</button>`;
+  document.getElementById("stampOverlay").classList.remove("hidden");
+}
+
+function closePoster() {
+  document.getElementById("stampOverlay").classList.add("hidden");
+}
+
+function posterSVG(title, quote) {
+  return `
+  <svg width="100%" height="260" viewBox="0 0 260 260">
+    <rect x="0" y="0" width="260" height="260" fill="#f3f0e8"/>
+    <rect x="12" y="12" width="236" height="236" fill="none" stroke="#1c1c1c" stroke-width="2"/>
+    <text x="130" y="110" text-anchor="middle"
+      font-family="Playfair Display" font-size="22">${title}</text>
+    <text x="130" y="150" text-anchor="middle"
+      font-family="Cormorant Garamond" font-size="16">${quote}</text>
+  </svg>`;
+}
+</script>
+
+</body>
+</html>
