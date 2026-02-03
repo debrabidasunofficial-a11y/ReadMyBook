@@ -1,308 +1,279 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Story by Nature | Immersive Reading</title>
+    <title>A Story by Nature | The Folio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-paper: #f4f1ea;
-            --text-main: #2c2c2c;
-            --accent: #5d6d7e;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-            --font-serif: 'Georgia', serif;
-            --font-sans: 'Helvetica Neue', Arial, sans-serif;
+            --paper: #f4f1ea;
+            --ink: #1e1e1e;
+            --gold: #b38b4d;
+            --spine: #2c2924;
+            --serif: 'Libre Baskerville', serif;
+            --header: 'Cinzel', serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: #dcd7cc;
-            font-family: var(--font-sans);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        /* --- Landing Page --- */
-        #homepage {
-            min-height: 100vh;
+            background: #0f0f0f;
+            color: var(--ink);
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 4rem 2rem;
-            background: var(--bg-paper);
-        }
-
-        header { text-align: center; margin-bottom: 4rem; }
-        header h1 { font-family: var(--font-serif); font-size: 3rem; font-weight: 400; margin-bottom: 0.5rem; }
-        header p { color: var(--accent); font-style: italic; letter-spacing: 1px; }
-
-        .story-grid {
-            max-width: 1000px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .story-card {
-            background: white;
-            padding: 2rem;
-            border: 1px solid #e0ddd5;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-        }
-
-        .story-card:hover { transform: translateY(-5px); }
-        .story-card h3 { font-family: var(--font-serif); margin-bottom: 1rem; }
-        .btn-read {
-            display: inline-block;
-            margin-top: 1.5rem;
-            padding: 0.6rem 1.2rem;
-            background: var(--text-main);
-            color: white;
-            text-decoration: none;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        /* --- Reader View --- */
-        #reader-view {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #222;
-            z-index: 100;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            font-family: var(--serif);
         }
 
+        /* --- THE BOOK CASE --- */
         .book-container {
             position: relative;
-            width: 90vw;
-            height: 80vh;
-            max-width: 1200px;
+            width: 900px;
+            height: 600px;
             perspective: 2000px;
             display: flex;
+            justify-content: center;
+        }
+
+        /* The physical hardback cover */
+        .book-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--spine);
+            border-radius: 5px;
+            box-shadow: 0 50px 80px rgba(0,0,0,0.8);
+            border: 1px solid #3d3a33;
+        }
+
+        /* The Pages Spread */
+        .page-spread {
+            position: relative;
+            width: 880px;
+            height: 570px;
+            top: 15px;
+            background: var(--paper);
+            display: flex;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        /* Central Gutter Shadow */
+        .page-spread::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            width: 80px;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.06) 100%);
+            transform: translateX(-50%);
+            z-index: 5;
+            pointer-events: none;
         }
 
         .page {
             flex: 1;
-            background: var(--bg-paper);
-            padding: 4rem;
+            padding: 60px 50px;
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.02);
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
         }
 
-        .page-left { border-radius: 5px 0 0 5px; border-right: 1px solid rgba(0,0,0,0.05); }
-        .page-right { border-radius: 0 5px 5px 0; border-left: 1px solid rgba(0,0,0,0.05); }
+        .page-left { border-right: 1px solid rgba(0,0,0,0.05); }
 
+        /* Typography */
         .content {
-            font-family: var(--font-serif);
-            font-size: 1.2rem;
-            line-height: 1.8;
+            font-size: 1.1rem;
+            line-height: 1.9;
             text-align: justify;
+            opacity: 1;
+            transition: opacity 0.4s;
         }
 
-        /* Animation Classes */
-        .flipping {
-            animation: flip 0.6s ease-in-out;
-            box-shadow: -10px 0 20px var(--shadow-color);
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-top: 4px;
+            padding-right: 10px;
+            color: var(--gold);
+            font-family: var(--header);
         }
 
-        @keyframes flip {
-            0% { transform: rotateY(0deg); }
-            100% { transform: rotateY(-10deg); }
-        }
-
-        /* --- Controls --- */
-        .controls {
+        /* Folios */
+        .folio {
             position: absolute;
-            bottom: -60px;
-            width: 100%;
+            bottom: 30px;
+            font-size: 0.75rem;
+            color: #999;
+            letter-spacing: 2px;
+            width: calc(100% - 100px);
             display: flex;
             justify-content: space-between;
-            color: white;
         }
 
-        .close-reader, .mute-toggle {
-            cursor: pointer;
-            background: none;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.5rem 1rem;
-        }
-
-        /* Tap Zones */
-        .tap-zone {
+        /* NAVIGATION OVERLAY */
+        .nav-overlay {
             position: absolute;
-            top: 0; width: 15%; height: 100%;
-            z-index: 10;
-            cursor: pointer;
+            bottom: -80px;
             display: flex;
+            gap: 40px;
             align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
         }
-        .tap-zone:hover { opacity: 0.1; background: black; }
-        .zone-right { right: 0; }
-        .zone-left { left: 0; }
 
-        /* --- Instruction Overlay --- */
-        #overlay {
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            font-family: var(--header);
+            letter-spacing: 3px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 10px;
+        }
+
+        .nav-btn:hover { color: white; transform: scale(1.1); }
+        .nav-btn:disabled { color: #333; cursor: default; }
+
+        /* ANIMATION: The Flip */
+        .flipping-forward {
+            animation: flipForward 0.8s forwards;
+            transform-origin: left;
+        }
+
+        @keyframes flipForward {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(-20deg) scale(1.05); filter: brightness(0.9); }
+            100% { transform: rotateY(0deg); }
+        }
+
+        /* Instruction Hint */
+        #hint {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            text-align: center;
-            pointer-events: none;
+            top: 20px;
+            color: var(--gold);
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
         }
 
-        @media (max-width: 768px) {
-            .book-container { flex-direction: column; height: 90vh; }
-            .page-left { display: none; } /* Show single page on mobile */
-            .page { padding: 2rem; }
+        @media (max-width: 950px) {
+            .book-container { width: 100vw; height: 100vh; }
+            .page-left { display: none; }
+            .page-spread { width: 100%; height: 100%; top: 0; }
+            .page-spread::before { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <section id="homepage">
-        <header>
-            <h1>A Story by Nature</h1>
-            <p>Original tales from the quiet corners of the world.</p>
-        </header>
+    <div id="hint">A Story by Nature</div>
 
-        <div class="story-grid">
-            <article class="story-card" onclick="openStory('The Whispering Pine')">
-                <h3>The Whispering Pine</h3>
-                <p>A short journey through the ancient woods where trees remember the first sunrise...</p>
-                <span class="btn-read">Read Story</span>
-            </article>
-            </div>
-    </section>
-
-    <section id="reader-view">
-        <div class="book-container" id="book">
-            <div class="tap-zone zone-left" onclick="prevPage()"></div>
-            <div class="tap-zone zone-right" onclick="nextPage()"></div>
-
-            <div class="page page-left" id="p-left">
+    <div class="book-container">
+        <div class="book-cover"></div>
+        
+        <div class="page-spread" id="spread">
+            <div class="page page-left">
                 <div class="content" id="ctx-left"></div>
+                <div class="folio">
+                    <span id="num-left">1</span>
+                    <span>•</span>
+                </div>
             </div>
-            <div class="page page-right" id="p-right">
+            
+            <div class="page page-right">
                 <div class="content" id="ctx-right"></div>
-            </div>
-
-            <div class="controls">
-                <button class="close-reader" onclick="closeReader()">← Back to Library</button>
-                <div id="page-num">Page 1-2</div>
-                <button class="mute-toggle" onclick="toggleMute()">Toggle Sound</button>
+                <div class="folio">
+                    <span>•</span>
+                    <span id="num-right">2</span>
+                </div>
             </div>
         </div>
-    </section>
 
-    <div id="overlay">Swipe left or tap the right edge to turn the page</div>
+        <div class="nav-overlay">
+            <button class="nav-btn" onclick="prev()" id="btn-prev">PREV</button>
+            <button class="nav-btn" onclick="next()" id="btn-next">NEXT</button>
+        </div>
+    </div>
 
-    <audio id="flip-sound" src="https://www.soundjay.com/misc/sounds/paper-flip-1.mp3"></audio>
+    <audio id="audio-flip" src="https://www.soundjay.com/misc/sounds/paper-flip-1.mp3"></audio>
 
     <script>
-        const storyData = {
-            "The Whispering Pine": [
-                "It began with a shiver in the roots. The pine had stood for three centuries, watching the seasons bleed into one another like watercolors on a wet canvas. It had seen empires rise and fall, but mostly, it had seen the moss grow.",
-                "Beneath its heavy boughs, the air felt different—thicker, as if the oxygen itself was laced with memory. If you pressed your ear to the sap-stained bark, you wouldn't hear the wind. You would hear the slow, rhythmic pulse of the earth.",
-                "People rarely visited this high up the ridge. They preferred the manicured parks and the paved paths. But nature doesn't perform for an audience. It exists in the silence of the ignored spaces.",
-                "One evening, a traveler arrived with nothing but a notebook and a heavy heart. He sat at the base of the pine and waited. He didn't know what he was waiting for, only that the city had become too loud for his thoughts.",
-                "The tree began to speak, not in words, but in the creak of its limbs. It told a story of a great frost that had once turned the world to glass. It told of the birds that had nested and flown, never to return.",
-                "By dawn, the traveler realized that his own sorrows were but a single leaf in a vast forest. He stood up, touched the rough bark in thanks, and walked back down the ridge. The pine remained, whispering to the wind."
-            ]
-        };
+        const story = [
+            "The forest does not speak in words; it speaks in the architecture of light. When the sun hangs low, the shadows of the oaks become long, rhythmic fingers that trace the history of the earth upon the mossy floor. To enter here is to surrender the clock.",
+            "There is a specific kind of silence found only in the deep woods. It is not the absence of sound, but the presence of a thousand tiny vibrations—the hum of a beetle, the sigh of a falling leaf, the slow, agonizing growth of stone. It is a symphony of the overlooked.",
+            "I found the old cabin at the edge of the clearing just as the mist began to crawl. It was a structure held together more by memory than by nails. The wood was silver-grey, weathered by a century of mountain winters. It looked tired, yet proud.",
+            "Inside, the air smelled of dried sage and cold iron. A single window faced the east, perfectly positioned to catch the first spear of dawn. Someone had lived here once, someone who understood that the best view in the world requires no glass.",
+            "In nature, nothing is wasted. A fallen tree becomes a nursery for a hundred saplings. A drought forces the roots to dive deeper, seeking the dark, cold secrets of the groundwater. Pain, in the wild, is simply a catalyst for a new kind of strength.",
+            "I left the cabin as the first stars appeared. They didn't twinkle; they burned with a steady, ancient coldness. Walking back, I realized that we don't own the land. We are merely guests, permitted to stay as long as we remember how to listen."
+        ];
 
-        let currentStory = [];
-        let currentPage = 0;
-        let isMuted = false;
+        let idx = 0;
+        const flipSnd = document.getElementById('audio-flip');
 
-        function openStory(title) {
-            currentStory = storyData[title];
-            currentPage = 0;
-            document.getElementById('homepage').style.display = 'none';
-            document.getElementById('reader-view').style.display = 'flex';
-            updatePages();
-            checkTutorial();
-        }
-
-        function closeReader() {
-            document.getElementById('homepage').style.display = 'flex';
-            document.getElementById('reader-view').style.display = 'none';
-        }
-
-        function updatePages() {
-            const left = document.getElementById('ctx-left');
-            const right = document.getElementById('ctx-right');
+        function render() {
+            const spread = document.getElementById('spread');
+            const l = document.getElementById('ctx-left');
+            const r = document.getElementById('ctx-right');
             
-            left.innerText = currentStory[currentPage] || "";
-            right.innerText = currentStory[currentPage + 1] || "The End.";
+            // Add Flip Animation
+            spread.classList.add('flipping-forward');
             
-            document.getElementById('page-num').innerText = `Page ${currentPage + 1}-${currentPage + 2}`;
+            // Fade text out slightly during flip
+            l.style.opacity = "0";
+            r.style.opacity = "0";
+
+            setTimeout(() => {
+                l.innerText = story[idx];
+                r.innerText = story[idx+1] || "The end is but a beginning.";
+                
+                // Dropcap Logic
+                if(idx === 0) l.classList.add('drop-cap');
+                else l.classList.remove('drop-cap');
+
+                document.getElementById('num-left').innerText = idx + 1;
+                document.getElementById('num-right').innerText = idx + 2;
+                
+                l.style.opacity = "1";
+                r.style.opacity = "1";
+                spread.classList.remove('flipping-forward');
+                
+                // Button states
+                document.getElementById('btn-prev').disabled = (idx === 0);
+                document.getElementById('btn-next').disabled = (idx + 2 >= story.length);
+            }, 400);
         }
 
-        function nextPage() {
-            if (currentPage + 2 < currentStory.length) {
-                playFlipEffect();
-                currentPage += 2;
-                updatePages();
+        function next() {
+            if (idx + 2 < story.length) {
+                flipSnd.currentTime = 0;
+                flipSnd.play();
+                idx += 2;
+                render();
             }
         }
 
-        function prevPage() {
-            if (currentPage > 0) {
-                playFlipEffect();
-                currentPage -= 2;
-                updatePages();
+        function prev() {
+            if (idx > 0) {
+                flipSnd.currentTime = 0;
+                flipSnd.play();
+                idx -= 2;
+                render();
             }
         }
 
-        function playFlipEffect() {
-            if (!isMuted) document.getElementById('flip-sound').play();
-            const book = document.getElementById('book');
-            book.classList.add('flipping');
-            setTimeout(() => book.classList.remove('flipping'), 600);
-        }
+        // Initialize
+        render();
 
-        function toggleMute() {
-            isMuted = !isMuted;
-        }
-
-        function checkTutorial() {
-            if (!localStorage.getItem('tutorialSeen')) {
-                const overlay = document.getElementById('overlay');
-                overlay.style.display = 'flex';
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => { 
-                        overlay.style.display = 'none';
-                        localStorage.setItem('tutorialSeen', 'true');
-                    }, 1000);
-                }, 3000);
-            }
-        }
-
-        // Swipe Support
-        let touchstartX = 0;
-        let touchendX = 0;
-
-        document.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX);
-        document.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchstartX - touchendX > 50) nextPage();
-            if (touchendX - touchstartX > 50) prevPage();
+        // Key Support
+        document.addEventListener('keydown', e => {
+            if(e.key === "ArrowRight") next();
+            if(e.key === "ArrowLeft") prev();
         });
     </script>
 </body>
