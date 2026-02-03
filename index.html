@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Story by Nature | Immersive Reading</title>
+    <style>
+        :root {
+            --bg-paper: #f4f1ea;
+            --text-main: #2c2c2c;
+            --accent: #5d6d7e;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-serif: 'Georgia', serif;
+            --font-sans: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #dcd7cc;
+            font-family: var(--font-sans);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* --- Landing Page --- */
+        #homepage {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4rem 2rem;
+            background: var(--bg-paper);
+        }
+
+        header { text-align: center; margin-bottom: 4rem; }
+        header h1 { font-family: var(--font-serif); font-size: 3rem; font-weight: 400; margin-bottom: 0.5rem; }
+        header p { color: var(--accent); font-style: italic; letter-spacing: 1px; }
+
+        .story-grid {
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .story-card {
+            background: white;
+            padding: 2rem;
+            border: 1px solid #e0ddd5;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .story-card:hover { transform: translateY(-5px); }
+        .story-card h3 { font-family: var(--font-serif); margin-bottom: 1rem; }
+        .btn-read {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--text-main);
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        /* --- Reader View --- */
+        #reader-view {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #222;
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .book-container {
+            position: relative;
+            width: 90vw;
+            height: 80vh;
+            max-width: 1200px;
+            perspective: 2000px;
+            display: flex;
+        }
+
+        .page {
+            flex: 1;
+            background: var(--bg-paper);
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.02);
+        }
+
+        .page-left { border-radius: 5px 0 0 5px; border-right: 1px solid rgba(0,0,0,0.05); }
+        .page-right { border-radius: 0 5px 5px 0; border-left: 1px solid rgba(0,0,0,0.05); }
+
+        .content {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        /* Animation Classes */
+        .flipping {
+            animation: flip 0.6s ease-in-out;
+            box-shadow: -10px 0 20px var(--shadow-color);
+        }
+
+        @keyframes flip {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(-10deg); }
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: absolute;
+            bottom: -60px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .close-reader, .mute-toggle {
+            cursor: pointer;
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Tap Zones */
+        .tap-zone {
+            position: absolute;
+            top: 0; width: 15%; height: 100%;
+            z-index: 10;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tap-zone:hover { opacity: 0.1; background: black; }
+        .zone-right { right: 0; }
+        .zone-left { left: 0; }
+
+        /* --- Instruction Overlay --- */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .book-container { flex-direction: column; height: 90vh; }
+            .page-left { display: none; } /* Show single page on mobile */
+            .page { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <section id="homepage">
+        <header>
+            <h1>A Story by Nature</h1>
+            <p>Original tales from the quiet corners of the world.</p>
+        </header>
+
+        <div class="story-grid">
+            <article class="story-card" onclick="openStory('The Whispering Pine')">
+                <h3>The Whispering Pine</h3>
+                <p>A short journey through the ancient woods where trees remember the first sunrise...</p>
+                <span class="btn-read">Read Story</span>
+            </article>
+            </div>
+    </section>
+
+    <section id="reader-view">
+        <div class="book-container" id="book">
+            <div class="tap-zone zone-left" onclick="prevPage()"></div>
+            <div class="tap-zone zone-right" onclick="nextPage()"></div>
+
+            <div class="page page-left" id="p-left">
+                <div class="content" id="ctx-left"></div>
+            </div>
+            <div class="page page-right" id="p-right">
+                <div class="content" id="ctx-right"></div>
+            </div>
+
+            <div class="controls">
+                <button class="close-reader" onclick="closeReader()">← Back to Library</button>
+                <div id="page-num">Page 1-2</div>
+                <button class="mute-toggle" onclick="toggleMute()">Toggle Sound</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="overlay">Swipe left or tap the right edge to turn the page</div>
+
+    <audio id="flip-sound" src="https://www.soundjay.com/misc/sounds/paper-flip-1.mp3"></audio>
+
+    <script>
+        const storyData = {
+            "The Whispering Pine": [
+                "It began with a shiver in the roots. The pine had stood for three centuries, watching the seasons bleed into one another like watercolors on a wet canvas. It had seen empires rise and fall, but mostly, it had seen the moss grow.",
+                "Beneath its heavy boughs, the air felt different—thicker, as if the oxygen itself was laced with memory. If you pressed your ear to the sap-stained bark, you wouldn't hear the wind. You would hear the slow, rhythmic pulse of the earth.",
+                "People rarely visited this high up the ridge. They preferred the manicured parks and the paved paths. But nature doesn't perform for an audience. It exists in the silence of the ignored spaces.",
+                "One evening, a traveler arrived with nothing but a notebook and a heavy heart. He sat at the base of the pine and waited. He didn't know what he was waiting for, only that the city had become too loud for his thoughts.",
+                "The tree began to speak, not in words, but in the creak of its limbs. It told a story of a great frost that had once turned the world to glass. It told of the birds that had nested and flown, never to return.",
+                "By dawn, the traveler realized that his own sorrows were but a single leaf in a vast forest. He stood up, touched the rough bark in thanks, and walked back down the ridge. The pine remained, whispering to the wind."
+            ]
+        };
+
+        let currentStory = [];
+        let currentPage = 0;
+        let isMuted = false;
+
+        function openStory(title) {
+            currentStory = storyData[title];
+            currentPage = 0;
+            document.getElementById('homepage').style.display = 'none';
+            document.getElementById('reader-view').style.display = 'flex';
+            updatePages();
+            checkTutorial();
+        }
+
+        function closeReader() {
+            document.getElementById('homepage').style.display = 'flex';
+            document.getElementById('reader-view').style.display = 'none';
+        }
+
+        function updatePages() {
+            const left = document.getElementById('ctx-left');
+            const right = document.getElementById('ctx-right');
+            
+            left.innerText = currentStory[currentPage] || "";
+            right.innerText = currentStory[currentPage + 1] || "The End.";
+            
+            document.getElementById('page-num').innerText = `Page ${currentPage + 1}-${currentPage + 2}`;
+        }
+
+        function nextPage() {
+            if (currentPage + 2 < currentStory.length) {
+                playFlipEffect();
+                currentPage += 2;
+                updatePages();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                playFlipEffect();
+                currentPage -= 2;
+                updatePages();
+            }
+        }
+
+        function playFlipEffect() {
+            if (!isMuted) document.getElementById('flip-sound').play();
+            const book = document.getElementById('book');
+            book.classList.add('flipping');
+            setTimeout(() => book.classList.remove('flipping'), 600);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+        }
+
+        function checkTutorial() {
+            if (!localStorage.getItem('tutorialSeen')) {
+                const overlay = document.getElementById('overlay');
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => { 
+                        overlay.style.display = 'none';
+                        localStorage.setItem('tutorialSeen', 'true');
+                    }, 1000);
+                }, 3000);
+            }
+        }
+
+        // Swipe Support
+        let touchstartX = 0;
+        let touchendX = 0;
+
+        document.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX);
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            if (touchstartX - touchendX > 50) nextPage();
+            if (touchendX - touchstartX > 50) prevPage();
+        });
+    </script>
+</body>
+</html>
